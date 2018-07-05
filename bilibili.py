@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-# coding: utf-8
-# auther: 0.382
-# data:   2018-06-24
+# encoding: utf-8
+# author: 0.382
+# date:
 # description: 抓取b站番剧数据
-# enviroment:  Ubuntu16.04LTS 32bit python3.5
-# ------------------------------------------
+# environment:  win64 python3.7
+# -----------------------------
 
-import urllib
 from urllib import request,parse
+import os
 import json
 import codecs
 import re
+from fuzzywuzzy import fuzz
 
-Headers = {'User-Agent':'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/66.0.3359.181 Chrome/66.0.3359.181 Safari/537.36'}
+Headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36'}
 anime_sort_URL = 'https://bangumi.bilibili.com/media/web_api/search/result'
 
 urldata = {
@@ -32,12 +33,17 @@ urldata = {
     'pagesize':       '20'  #一页大小
 }
 
+# 下载一个页面
 def load_page(url, urldata):
-    this_url = url + '?' + parse.urlencode(urldata)
+    if urldata == None:
+        this_url = url
+    else:
+        this_url = url + '?' + parse.urlencode(urldata)
     req = request.Request(this_url, headers = Headers)
     response = request.urlopen(req)
     return response.read().decode('utf-8')
 
+# 这个anime是一个大字典，其形状你可以自己print看看，也可以看看anime.json
 def get_anime(anime):
     anime_req = request.Request(anime['link'], headers=Headers)
     try:
@@ -62,19 +68,47 @@ def get_anime(anime):
     anime_dic['mediaRating'] = anime_data['mediaRating']             #评分，由于有的番没有评分，我就取这个参数了，后面也会比较方便
     return anime_dic
 
+# 保存番剧数据
 def save_anime(anime):
     anime_dic = get_anime(anime)
     if anime_dic != {}:
-        fp = codecs.open('./anime/{0}.json'.format(anime_dic['anime']),'w','utf-8')
+        fp = codecs.open('.\\anime\\{0}.json'.format(anime_dic['anime']),'w','utf-8')
         json.dump(anime_dic,fp,ensure_ascii=False)
         fp.close()
+
+# 创建一个索引，便于从番名检索番剧数据，我还是觉得用番号作为文件名便于管理，只好出此下策
+# sql是不会sql的，这辈子都不会sql的，只能够写写json,csv才能维持的了生活这样子
+def make_index():
+    anime_file_list = os.listdir('.\\anime')
+    index = {}
+    for file in anime_file_list:
+        fp = codecs.open('.\\anime\\'+file, 'r', 'utf-8')
+        anime = json.load(fp)
+        index[anime['title']] = anime['anime']
+        fp.close()
+    index_file = codecs.open('index.json','w','utf-8')
+    json.dump(index, index_file, ensure_ascii=False, sort_keys=True, indent=4)
+
+# 想到实际存储的题目是固定格式的，未必都记得住，就用模糊匹配吧
+# 下一步是不是该人工智能，自然语言搜索，把好大的鱼和游戏人生联系在一起呢，对我而言太难了
+# 模糊匹配实测还是可以把《实教》这样的简称搜索出来的，毕竟有字符相同
+def search_anime(Title):
+    index = json.load(codecs.open('index.json','r','utf-8'))
+    Possible_anime = []
+    for key in index.keys():
+        if fuzz.ratio(Title,key):
+            Possible_anime.append(index[key])
+    return Possible_anime
+
 if __name__ == '__main__':
-    for pagenumber in range(1,3):
+    for pagenumber in range(1,2):
         print(pagenumber)
         urldata['page'] = str(pagenumber)
         html = load_page(anime_sort_URL, urldata)
         data = json.loads(html)
         anime_list = data['result']['data']
         for anime in anime_list:
-            #print(anime['title'])
+            print(anime['title'])
             save_anime(anime)
+    make_index()
+    print(search_anime('实教'))

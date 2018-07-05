@@ -1,0 +1,20 @@
+{
+	'badge': '付费观看',
+	'badge_type': 2,
+	'cover': 'http://i0.hdslb.com/bfs/bangumi/b6e3986355efc081b7f4aaf9f576c9ce8116e193.jpg',
+	'index_show': '全13话',
+	'is_finish': 1,
+	'link': 'https://www.bilibili.com/bangumi/play/ss21542',
+	'media_id': 8892,
+	'order': {
+		'follow': '389.3万人追番',
+		'play': '4590.1万次播放',
+		'pub_date': 1515600000,
+		'pub_real_time': 1515600000,
+		'renewal_time': 1522857600,
+		'score': '9.7分',
+		'type': 'follow'
+	},
+	'season_id': 21542,
+	'title': '紫罗兰永恒花园'
+}
